@@ -1,0 +1,5 @@
+torch
+numpy
+torchvision
+# Optional (Windows): DirectML backend for PyTorch. Install only if you need DirectML support:
+# pip install torch-directml
