@@ -34,3 +34,46 @@ loader = torch.utils.data.DataLoader(
 
 print("Input:", "".join(idx_to_char[i.item()] for i in inputs[0]))
 print("Target:", "".join(idx_to_char[i.item()] for i in targets[0]))
+
+# --- training implementation using model.py ---
+import torch.nn as nn
+from model import CharRNN
+
+# hyperparameters
+embed_size = 128
+hidden_size = 256
+num_layers = 2
+dropout = 0.0
+lr = 1e-3
+epochs = 10
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model = CharRNN(vocab_size, embed_size, hidden_size, num_layers, dropout).to(device)
+opt = torch.optim.Adam(model.parameters(), lr=lr)
+crit = nn.CrossEntropyLoss()
+
+for epoch in range(epochs):
+    model.train()
+    total_loss = 0.0
+    for xb, yb in loader:
+        xb, yb = xb.to(device), yb.to(device)               # (batch, seq)
+        opt.zero_grad()
+        logits, _ = model(xb)                               # (batch, seq, vocab)
+        loss = crit(logits.view(-1, vocab_size), yb.view(-1))
+        loss.backward()
+        opt.step()
+        total_loss += loss.item() * xb.size(0)
+    avg = total_loss / len(dataset)
+    print(f"Epoch {epoch+1}/{epochs} loss: {avg:.4f}")
+
+# save checkpoint with vocab and hyperparams
+torch.save({
+    "model_state": model.state_dict(),
+    "vocab_size": vocab_size,
+    "embed_size": embed_size,
+    "hidden_size": hidden_size,
+    "num_layers": num_layers,
+    "char_to_idx": char_to_idx,
+    "idx_to_char": idx_to_char,
+    "sequence_length": sequence_length,
+}, "checkpoint.pth")
