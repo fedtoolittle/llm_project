@@ -1,0 +1,62 @@
+START: Sing, 
+temp=0.3 seed=0
+Sing,        he  s         the              he  thithe   t    an               the                       he                          the                     t     he     anghe          t            s                   the         he        he                              the       ther  and          hand               and the          s the   anous               an            he                         
+
+temp=0.3 seed=1
+Sing,        s                          heand       ather                 the         anghe    and the the          the                                         he                          than        he                                         than         anghe the                                       the         the   the           and          the      he     t              the           s        ang
+
+temp=0.3 seed=2
+Sing,                    the             the an   and     and       he                               henous      he              s    the                 and            her   thanous             the  the        the    he       the  t              an        an                           the     an    t                    than               an                               her                    thanous   
+
+temp=0.5 seed=0
+Sing,  the  an   sthous    the  hand     there  thit s s t s  an      henghe  the      t   tor anor   s  he  ame         hand  athe  the amonghe    the      t he  he     anghes than    t  thon      s    s      this    t  hare   se han      he      the      the    sowithind         t  s  and        ton  alle   thanghe  angounganon      s t   thale  ame  tound  theamit     and  he            ther         
+
+temp=0.5 seed=1
+Sing,    han s    s   hithanghe         hithe       ather      an heand   the thangar anghe  angongan  the      thithe          t s   st       an   than     thans              han  hithe  t     s     he   and     and      har he   and        sthaler       anghoungher  and       he            an         the  hat he the   thisous he  thame the am he   so  t he    than and     hithe      he  ansthe s  thes
+
+temp=0.5 seed=2
+Sing,  s   he      ther  the   theand   thit an   and     and       he    torous s   the   the   the hinous   and   and s        s t  the     heathilond  anghen  an s  sher  han  hanst  han t the     the        ande   har  the t the               atin      an athen he   t      he   and heand thind  t    s       st      than  this     s   an thand            t   thame   sher     he    he    arer athe the
+
+temp=0.8 seed=0
+Sing,  the  ans  sthous s  the  hand     therer thit s s t s  an  herithe  hend the    t   torowon  thear   thowhe here  hangan t    theame  ale s  the      t s hend     anghes thanonong  tond  thous se s t    this   thind      se han se  shesor   ther s   thound sowithind  angheanonds  and
+  se angon  alle   thanghan angounganowhe thes t   thalous he  tounoritheamit     anse he          thand
+   arile 
+
+temp=0.8 seed=1
+Sing, anon ses   towishith s her    he  hither  anowathithe    arithathind  s thangar amere  angongan  the      thithe arithe t t s  houn   t  ans heanorong thamy    s  ale alendenghithesthithithe s  he  se thame and hean har hend an    he   sthalerin hanongher t  he  se ang he he   he  the  anghe  he  thouris the the   thisouram   thamouse thallllleso  t he aleat   andorid hiton  an  he  ansthe s  thes
+
+temp=0.8 seed=2
+Sing,  serere      t s hathe howowand  herit an t and     and  hen  heamerealond s allyousealeanghind  he s and  hisoun s an   t s t athe   athande  and  anghen the s t her  han  hales shathe t  t  an   the     ande   haroureat  the           and s     s   an alerorendend  t   he   ansthowan thind  t  t s       st  athere t  thisere  s   an thand    thongat t   thamo   shere ame s thile t  aror athe t t
+
+----
+START: The 
+temp=0.3 seed=0
+The        he  s         the              he  thithe   t    an               the                       he                          the                     t     he     anghe          t            s                   the         he        he                              the       ther  and          hand               and the          s the   anous               an            he                         
+
+temp=0.3 seed=1
+The        s                          heand       ather                 the         anghe    and the the          the                                         he                          than        he                                         than         anghe the                                       the         the   the           and          the      he     t              the           s        ang
+
+temp=0.3 seed=2
+The                    the             the an   and     and       he                               henous      he              s    the                 and            her   thanous             the  the        the    he       the  t              an        an                           the     an    t                    than               an                               her                    thanous   
+
+temp=0.5 seed=0
+The  the  an   sthous    the  hand     there  thit s s t s  an      henghe  the      t   tor anor   s  he  ame         hand  athe  the amonghe    the      t he  he     anghes than    t  thon      s    s      this    t  hare   se han      he      the      the    sowithind         t  s  and        ton  alle   thanghe  angounganon      s t   thale  ame  tound  theamit     and  he            ther         
+
+temp=0.5 seed=1
+The    han s    s   hithanghe         hithe       ather      an heand   the thangar anghe  angongan  the      thithe          t s   st       an   than     thans              han  hithe  t     s     he   and     and      har he   and        sthaler       anghoungher  and       he            an         the  hat he the   thisous he  thame the am he   so  t he    than and     hithe      he  ansthe s  thes
+
+temp=0.5 seed=2
+The  s   he      ther  the   theand   thit an   and     and       he    torous s   the   the   the hinous   and   and s        s t  the     heathilond  anghen  an s  sher  han  hanst  han t the     the        ande   har  the t the               atin      an athen he   t      he   and heand thind  t    s       st      than  this     s   an thand            t   thame   sher     he    he    arer athe the
+
+temp=0.8 seed=0
+The  the  ans  sthous s  the  hand     therer thit s s t s  an  herithe  hend the    t   torowon  thear   thowhe here  hangan t    theame  ale s  the      t s hend     anghes thanonong  tond  thous se s t    this   thind      se han se  shesor   ther s   thound sowithind  angheanonds  and
+  se angon  alle   thanghan angounganowhe thes t   thalous he  tounoritheamit     anse he          thand
+   arile 
+
+temp=0.8 seed=1
+The anon ses   towishith s her    he  hither  anowathithe    arithathind  s thangar amere  angongan  the      thithe arithe t t s  houn   t  ans heanorong thamy    s  ale alendenghithesthithithe s  he  se thame and hean har hend an    he   sthalerin hanongher t  he  se ang he he   he  the  anghe  he  thouris the the   thisouram   thamouse thallllleso  t he aleat   andorid hiton  an  he  ansthe s  thes
+
+temp=0.8 seed=2
+The  serere      t s hathe howowand  herit an t and     and  hen  heamerealond s allyousealeanghind  he s and  hisoun s an   t s t athe   athande  and  anghen the s t her  han  hales shathe t  t  an   the     ande   haroureat  the           and s     s   an alerorendend  t   he   ansthowan thind  t  t s       st  athere t  thisere  s   an thand    thongat t   thamo   shere ame s thile t  aror athe t t
+
+----

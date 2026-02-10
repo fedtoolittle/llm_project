@@ -19,6 +19,7 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
 
     seq = [char_to_idx.get(ch, 0) for ch in start_seq]
     input_tensor = torch.tensor([seq], dtype=torch.long, device=device)
+    # GRU returns a single hidden tensor (num_layers, batch, hidden_size)
     hidden = model.init_hidden(1, device=device)
 
     out_chars = list(start_seq)
@@ -26,7 +27,7 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
 
     with torch.no_grad():
         for _ in range(max_len):
-            logits, hidden = model(cur_input, hidden)            # (1,1,vocab)
+            logits, hidden = model(cur_input, hidden)            # (1,1,vocab) and hidden: (num_layers, 1, hidden)
             logits = logits[:, -1, :] / max(1e-8, temperature)
             probs = F.softmax(logits, dim=-1)
             next_idx = torch.multinomial(probs, num_samples=1).item()

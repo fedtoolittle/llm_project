@@ -46,7 +46,15 @@ num_layers = 2
 dropout = 0.0
 lr = 1e-3
 epochs = 10
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Prefer DirectML on Windows with AMD GPUs (torch-directml), fall back to CUDA/CPU.
+try:
+    import torch_directml as dml  # type: ignore
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
+else:
+    device = dml.device()
+    print("Using DirectML device:", device)
 
 model = CharRNN(vocab_size, embed_size, hidden_size, num_layers, dropout).to(device)
 opt = torch.optim.Adam(model.parameters(), lr=lr)

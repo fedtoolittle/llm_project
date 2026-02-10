@@ -1,3 +1,3 @@
 import numpy as np
 import torch
-import torchnn as nn
+import torch.nn as nn
