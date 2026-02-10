@@ -1,7 +1,37 @@
+import argparse
+import pickle
+from pathlib import Path
+
 import torch
 import torch.nn.functional as F
+
 from model import CharRNN
-from pathlib import Path
+
+
+REQUIRED_CKPT_KEYS = {"model_state", "vocab_size"}
+
+
+def _load_checkpoint(checkpoint_path):
+    try:
+        ckpt = torch.load(checkpoint_path, map_location="cpu")
+    except pickle.UnpicklingError:
+        # PyTorch >=2.6 defaults to weights_only=True, which can reject
+        # checkpoints containing Python objects (e.g., vocab dictionaries).
+        # Re-load with weights_only=False for trusted local checkpoints.
+        ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+
+    if not isinstance(ckpt, dict):
+        raise ValueError("Checkpoint is not a dictionary.")
+
+    missing = REQUIRED_CKPT_KEYS.difference(ckpt.keys())
+    if missing:
+        raise KeyError(f"Checkpoint missing required keys: {sorted(missing)}")
+
+    ckpt_version = ckpt.get("checkpoint_version", 1)
+    if ckpt_version not in (1, 2):
+        raise ValueError(f"Unsupported checkpoint_version={ckpt_version}")
+
+    return ckpt
 
 
 def _coerce_mappings(ckpt):
@@ -30,10 +60,10 @@ def _coerce_mappings(ckpt):
 
 
 def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperature=1.0, device=None):
-    ckpt = torch.load(checkpoint_path, map_location="cpu")
+    ckpt = _load_checkpoint(checkpoint_path)
     # allow caller to override device; otherwise prefer CUDA, else CPU
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    vocab_size = ckpt.get("vocab_size")
+    vocab_size = int(ckpt["vocab_size"])
     embed_size = ckpt.get("embed_size", 128)
     hidden_size = ckpt.get("hidden_size", 256)
     num_layers = ckpt.get("num_layers", 2)
@@ -69,8 +99,6 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
 
 
 if __name__ == "__main__":
-    import argparse
-
     p = argparse.ArgumentParser(description="Generate text from saved char-level RNN checkpoint")
     p.add_argument("--ckpt", default="checkpoint.pth")
     p.add_argument("--start", default="Sing, ")
