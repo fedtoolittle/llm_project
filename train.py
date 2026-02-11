@@ -1,10 +1,14 @@
 import argparse
 from pathlib import Path
 
+#import time # For timing the training loop
 import torch
 import torch.nn as nn
+#import torch.nn.functional as F
 
-#from model import CharRNN
+#from model import CharRNN # Deprecated CharRNN, replaced by TransformerModel
+#from optim_adam import ManualAdam # Deprecated Adam optimizer, replaced by ManualLion
+from optim_lion import ManualLion
 from transformer import TransformerModel
 
 
@@ -38,12 +42,15 @@ def pick_device():
     try:
         import torch_directml as dml  # type: ignore
     except Exception:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print("Using device:", device)
+        import traceback
+        traceback.print_exc() # This will tell us EXACTLY which operator failed
+        device = torch.device("cpu")
     else:
         device = dml.device()
         print("Using DirectML device:", device)
     return device
+
+
 
 
 def main():
@@ -116,8 +123,19 @@ def main():
         max_len=args.max_len,
     ).to(device)
 
-    opt = torch.optim.Adam(model.parameters(), lr=args.lr, foreach=False)
+
+#     SGD Fallback if Adam Fails
+#     opt = torch.optim.SGD(
+#     model.parameters(),
+#     lr=0.05,
+#     momentum=0.9
+#     )
+
+#    opt = ManualAdam(model.parameters(), lr=args.lr)
+
+    opt = ManualLion(model.parameters(), lr=args.lr)
     crit = nn.CrossEntropyLoss()
+
 
     best_val = float("inf")
     for epoch in range(args.epochs):
@@ -130,7 +148,7 @@ def main():
             opt.zero_grad()
             logits= model(xb)
             loss = crit(logits.view(-1, vocab_size), yb.view(-1))
-            print("Initial loss:", loss.item())
+            print("Loss:", loss.item())
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
@@ -175,7 +193,7 @@ def main():
                     "epoch": epoch + 1,
                     "vocab_size": vocab_size,
                     "embed_size": args.embed_size,
-                    "hidden_size": args.hidden_size,
+                    #"hidden_size": args.hidden_size,
                     "num_layers": args.num_layers,
                     "char_to_idx": char_to_idx,
                     "idx_to_char": idx_to_char,
