@@ -65,6 +65,11 @@ def main():
 
     if not (0.0 <= args.val_split < 1.0):
         raise ValueError("--val-split must be in [0.0, 1.0).")
+    if args.sequence_length > args.max_len:
+        raise ValueError(
+            "Invalid configuration: --sequence-length must be less than or equal to --max-len "
+            f"(got sequence_length={args.sequence_length}, max_len={args.max_len})."
+        )
 
     text = Path(args.data).read_text(encoding="utf-8")
     if not isinstance(text, str):

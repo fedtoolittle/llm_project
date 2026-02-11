@@ -1,5 +1,6 @@
 import argparse
 import pickle
+import warnings
 from pathlib import Path
 
 import torch
@@ -61,6 +62,10 @@ def _coerce_mappings(ckpt):
 
 
 def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperature=1.0, device=None):
+    """Generate text using a checkpoint-bound context window.
+
+    Maximum supported context length equals the checkpoint/model ``max_len``.
+    """
     ckpt = _load_checkpoint(checkpoint_path)
     # allow caller to override device; otherwise prefer CUDA, else CPU
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -76,7 +81,8 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
     # Determine the positional embedding length to use for model construction.
     # Prefer an explicit "max_len" saved in the checkpoint; otherwise
     # infer from the saved `pos_emb.weight` shape in the stored state_dict;
-    # fall back to the saved sequence_length or 512.
+    # fall back to the saved sequence_length or 512. This is also the
+    # maximum supported decoding context length.
     max_seq_len = ckpt.get("max_len")
     if max_seq_len is None:
         model_state = ckpt.get("model_state", {})
@@ -111,6 +117,15 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
     seq = [char_to_idx.get(ch, 0) for ch in start_seq]
     if len(seq) == 0:
         seq = [0]
+    if len(seq) > max_seq_len:
+        warnings.warn(
+            "Start prompt exceeds checkpoint context window; truncating to the most recent "
+            f"{max_seq_len} tokens (received {len(seq)}).",
+            stacklevel=2,
+        )
+        seq = seq[-max_seq_len:]
+        start_seq = start_seq[-max_seq_len:]
+
     input_tensor = torch.tensor([seq], dtype=torch.long, device=device)
     #hidden = model.init_hidden(1, device=device)
 
@@ -119,7 +134,8 @@ def generate_from_checkpoint(checkpoint_path, start_seq, max_len=200, temperatur
 
     with torch.no_grad():
         for _ in range(max_len):
-            logits = model(input_tensor)
+            context = input_tensor[:, -max_seq_len:]
+            logits = model(context)
             logits = logits[:, -1, :] / temperature
             probs = F.softmax(logits, dim=-1)
             next_idx = torch.multinomial(probs, num_samples=1).item()
