@@ -16,7 +16,13 @@ REQUIRED_CKPT_KEYS = {"model_state", "vocab_size"}
 class CheckpointGenerator:
     """Load a checkpoint once and provide reusable text generation."""
 
-    def __init__(self, checkpoint_path: str = "checkpoint.pth", device: Optional[str] = None):
+    def __init__(
+        self,
+        checkpoint_path: str = "checkpoint.pth",
+        device: Optional[str] = None,
+        allow_rebuild_vocab_from_data: bool = False,
+        data_path: str = "data.txt",
+    ):
         self.checkpoint_path = checkpoint_path
         self.ckpt = _load_checkpoint(checkpoint_path)
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,7 +33,11 @@ class CheckpointGenerator:
         self.num_layers = self.ckpt.get("num_layers", 2)
         self.num_heads = self.ckpt.get("num_heads", 4)
 
-        self.char_to_idx, self.idx_to_char = _coerce_mappings(self.ckpt)
+        self.char_to_idx, self.idx_to_char = _coerce_mappings(
+            self.ckpt,
+            allow_rebuild_from_data=allow_rebuild_vocab_from_data,
+            data_path=data_path,
+        )
         self.max_seq_len = _infer_max_seq_len(self.ckpt)
 
         self.model = TransformerModel(
@@ -98,7 +108,7 @@ def _load_checkpoint(checkpoint_path):
     return ckpt
 
 
-def _coerce_mappings(ckpt):
+def _coerce_mappings(ckpt, allow_rebuild_from_data=False, data_path="data.txt"):
     # Robustly construct char_to_idx (str->int) and idx_to_char (int->str)
     cti = ckpt.get("char_to_idx")
     iti = ckpt.get("idx_to_char")
@@ -115,8 +125,19 @@ def _coerce_mappings(ckpt):
             return char_to_idx, idx_to_char
         except Exception:
             pass
-    # fallback: rebuild from data.txt
-    text = Path("data.txt").read_text(encoding="utf-8")
+    if not allow_rebuild_from_data:
+        raise ValueError(
+            "Checkpoint is missing usable char/index mappings. "
+            "Provide checkpoints with `char_to_idx` or `idx_to_char`, or rerun with "
+            "--allow-rebuild-vocab-from-data and --data for legacy recovery."
+        )
+
+    warnings.warn(
+        "Rebuilding vocabulary from data file for compatibility recovery. "
+        "This may mismatch the original training vocabulary and produce degraded output.",
+        stacklevel=2,
+    )
+    text = Path(data_path).read_text(encoding="utf-8")
     chars = sorted(list(set(text)))
     char_to_idx = {ch: i for i, ch in enumerate(chars)}
     idx_to_char = {i: ch for i, ch in enumerate(chars)}
@@ -151,9 +172,16 @@ def generate_from_checkpoint(
     max_len=300,
     temperature=0.8,
     device=None,
+    allow_rebuild_vocab_from_data=False,
+    data_path="data.txt",
 ):
     """Generate text from a checkpoint path in one call."""
-    generator = CheckpointGenerator(checkpoint_path=checkpoint_path, device=device)
+    generator = CheckpointGenerator(
+        checkpoint_path=checkpoint_path,
+        device=device,
+        allow_rebuild_vocab_from_data=allow_rebuild_vocab_from_data,
+        data_path=data_path,
+    )
     return generator.generate(start_seq=start_seq, max_len=max_len, temperature=temperature)
 
 
@@ -166,12 +194,30 @@ def build_parser():
     parser.add_argument("--length", type=int, default=300)
     parser.add_argument("--temp", type=float, default=0.8)
     parser.add_argument("--device", default=None)
+    parser.add_argument(
+        "--allow-rebuild-vocab-from-data",
+        action="store_true",
+        help=(
+            "Allow rebuilding vocabulary from --data when checkpoint mappings are missing. "
+            "Use only for legacy recovery; output quality may degrade due to vocab mismatch."
+        ),
+    )
+    parser.add_argument(
+        "--data",
+        default="data.txt",
+        help="Path used only with --allow-rebuild-vocab-from-data.",
+    )
     return parser
 
 
 def main():
     args = build_parser().parse_args()
-    generator = CheckpointGenerator(checkpoint_path=args.checkpoint, device=args.device)
+    generator = CheckpointGenerator(
+        checkpoint_path=args.checkpoint,
+        device=args.device,
+        allow_rebuild_vocab_from_data=args.allow_rebuild_vocab_from_data,
+        data_path=args.data,
+    )
     print(generator.generate(args.start, max_len=args.length, temperature=args.temp))
 
 
