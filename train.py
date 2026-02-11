@@ -116,7 +116,7 @@ def main():
         max_len=args.max_len,
     ).to(device)
 
-    opt = torch.optim.Adam(model.parameters(), lr=args.lr)
+    opt = torch.optim.Adam(model.parameters(), lr=args.lr, foreach=False)
     crit = nn.CrossEntropyLoss()
 
     best_val = float("inf")
@@ -180,7 +180,7 @@ def main():
                     "char_to_idx": char_to_idx,
                     "idx_to_char": idx_to_char,
                     "sequence_length": args.sequence_length,
-                    "max_len": args.max_len,
+                    "max_len": args.max_len,    
                     "best_val_loss": None if val_loader is None else float(best_val),
                     "num_heads": args.num_heads,
                 },

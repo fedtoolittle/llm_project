@@ -90,7 +90,7 @@ class TransformerBlock(nn.Module):
         return x
 
 class TransformerModel(nn.Module):
-    def __init__(self, vocab_size, embed_size=256, num_heads=4, num_layers=2, max_len=512):
+    def __init__(self, vocab_size, embed_size=256, num_heads=4, num_layers=2, max_len=256):
         super().__init__()
 
         self.token_emb = nn.Embedding(vocab_size, embed_size)
