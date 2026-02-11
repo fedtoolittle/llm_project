@@ -49,12 +49,13 @@ def pick_device():
 def main():
     parser = argparse.ArgumentParser(description="Train char-level RNN")
     parser.add_argument("--data", default="data.txt")
-    parser.add_argument("--sequence-length", type=int, default=100)
+    parser.add_argument("--sequence-length", type=int, default=512)
     parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument("--embed-size", type=int, default=128)
+    parser.add_argument("--embed-size", type=int, default=256)
     parser.add_argument("--hidden-size", type=int, default=256)
-    parser.add_argument("--num-layers", type=int, default=2)
-    parser.add_argument("--num-heads", type=int, default=4)
+    parser.add_argument("--num-layers", type=int, default=6)
+    parser.add_argument("--num-heads", type=int, default=8)
+    parser.add_argument("--max-len", type=int, default=512)
     parser.add_argument("--dropout", type=float, default=0.0)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--epochs", type=int, default=5)
@@ -102,7 +103,14 @@ def main():
 
     device = pick_device()
 
-    model = TransformerModel(vocab_size, embed_size=args.embed_size, num_heads=args.num_heads, num_layers=args.num_layers)
+    model = TransformerModel(
+        vocab_size,
+        embed_size=args.embed_size,
+        num_heads=args.num_heads,
+        num_layers=args.num_layers,
+        max_len=args.max_len,
+    ).to(device)
+
     opt = torch.optim.Adam(model.parameters(), lr=args.lr)
     crit = nn.CrossEntropyLoss()
 
@@ -167,6 +175,7 @@ def main():
                     "char_to_idx": char_to_idx,
                     "idx_to_char": idx_to_char,
                     "sequence_length": args.sequence_length,
+                    "max_len": args.max_len,
                     "best_val_loss": None if val_loader is None else float(best_val),
                     "num_heads": args.num_heads,
                 },
