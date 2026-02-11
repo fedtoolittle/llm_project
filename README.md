@@ -4,7 +4,8 @@ Small char-level language-model preprocessing & data utilities.
 
 ## Project files
 - `train.py` — preprocessing & dataset creation (reads `data.txt`, builds char vocab and sequences)
-- `generate.py` — sample/generate text from saved checkpoints
+- `generate.py` — sample/generate text from saved checkpoints (one-shot CLI + reusable generator)
+- `interactive_generate.py` — interactive prompt loop that reuses a loaded checkpoint
 - `model.py` — model definition (`CharRNN`)
 - `data.txt` — raw training text
 
@@ -16,7 +17,12 @@ Small char-level language-model preprocessing & data utilities.
 - Trains `CharRNN` and saves `checkpoint.pth` including vocab and hyperparams.
 
 `generate.py`:
+- Exposes reusable generation utilities and a one-shot CLI.
 - Loads a checkpoint and generates autoregressive character text with temperature.
+
+`interactive_generate.py`:
+- Loads a checkpoint once at startup and runs a multi-turn `input()` loop.
+- Supports quit commands (`quit`, `exit`, `q`, `:q`) and empty-prompt handling.
 
 ## Quick start
 1. Install dependencies:
@@ -40,6 +46,15 @@ python train.py
 
 ```sh
 python generate.py --ckpt checkpoint.pth --start "Sing, " --length 300 --temp 0.8
+
+# equivalent checkpoint flag:
+python generate.py --checkpoint checkpoint.pth --start "Sing, " --length 300 --temp 0.8
+```
+
+4. Interactive generation (checkpoint loaded once):
+
+```sh
+python interactive_generate.py --ckpt checkpoint.pth --length 300 --temp 0.8
 ```
 
 ## Notes
