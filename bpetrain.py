@@ -2,6 +2,7 @@ import argparse
 from email import parser
 import math
 from pathlib import Path
+import random
 
 import torch
 import torch.nn.functional as F
@@ -50,7 +51,7 @@ def estimate_loss(model, data, eval_iters, batch_size, seq_len, device):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", default="data.txt")
+    parser.add_argument("--data", default="wikitext103_train.txt")
     parser.add_argument("--tokenizer", default="tokenizer.json")
 
     parser.add_argument("--batch_size", type=int, default=8)
@@ -59,7 +60,7 @@ def main():
     parser.add_argument("--num_heads", type=int, default=6)
     parser.add_argument("--num_layers", type=int, default=6)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--max_iters", type=int, default=20000)
+    parser.add_argument("--max_iters", type=int, default=16000)
     parser.add_argument("--eval_interval", type=int, default=500)
     parser.add_argument("--eval_iters", type=int, default=50)
 
@@ -85,7 +86,7 @@ def main():
         return torch.device("cpu")
     device = pick_device(args.device)
     print("Using device:", device)
-    print("Args OK", args.max_iters)
+    # print("Args OK", args.max_iters)
     
 
 # -------------------------------------------------
@@ -96,20 +97,21 @@ def main():
 
     tokenizer = Tokenizer.from_file(args.tokenizer)
     encoded = tokenizer.encode(text)
-    ids = torch.tensor(encoded.ids, dtype=torch.long)
+    # ids = torch.tensor(encoded.ids, dtype=torch.long) # Failing long tensor conversion
+    shards = list(Path(".").glob("wiki_shard_*.pt"))
 
     vocab_size = tokenizer.get_vocab_size()
 
-    print("Total tokens:", len(ids))
+    # print("Total tokens:", len(ids))
     print("Vocab size:", vocab_size)
 
 # -------------------------------------------------
 # Train / Val split
 # -------------------------------------------------
 
-    split = int(0.9 * len(ids))
-    train_data = ids[:split]
-    val_data = ids[split:]
+    current_shard = torch.load(random.choice(shards))
+    train_data = current_shard[:int(0.9*len(current_shard))]
+    val_data = current_shard[int(0.9*len(current_shard)):]
 
 # -------------------------------------------------
 # Model
@@ -190,18 +192,18 @@ def main():
             )
 
             # ---- Early stopping ----
-            if val_loss < best_val_loss - min_delta:
-                best_val_loss = val_loss
-                patience_counter = 0
-                torch.save(model.state_dict(), "best_model.pth")
-                print("New best model saved.")
-            else:
-                patience_counter += 1
-                print(f"No improvement. Patience: {patience_counter}/{patience}")
+            # if val_loss < best_val_loss - min_delta:
+            #     best_val_loss = val_loss
+            #     patience_counter = 0
+            #     torch.save(model.state_dict(), "best_model.pth")
+            #     print("New best model saved.")
+            # else:
+            #     patience_counter += 1
+            #     print(f"No improvement. Patience: {patience_counter}/{patience}")
 
-                if patience_counter >= patience:
-                    print("Early stopping triggered.")
-                    break
+            #     if patience_counter >= patience:
+            #         print("Early stopping triggered.")
+            #         break
    
 
     # -------------------------------------------------

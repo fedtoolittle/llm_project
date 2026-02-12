@@ -29,10 +29,13 @@
 # print("Tokenizer trained and saved.")
 
 
-from tokenizers import Tokenizer, models, trainers, pre_tokenizers
+from tokenizers import Tokenizer, models, trainers, pre_tokenizers, decoders
 
 tokenizer = Tokenizer(models.BPE())
+
+# IMPORTANT
 tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel()
+tokenizer.decoder = decoders.ByteLevel()
 
 trainer = trainers.BpeTrainer(
     vocab_size=16000,
@@ -40,4 +43,5 @@ trainer = trainers.BpeTrainer(
 )
 
 tokenizer.train(["wikitext103_train.txt"], trainer)
+
 tokenizer.save("tokenizer.json")
