@@ -1,44 +1,27 @@
-# b_lm_project
+# llm_project
 
-Small experimental language model project evolving from a character-level RNN to a mini Transformer architecture with plans for BPE tokenization and structured Q&A training.
+A minimal GPT-style language model sandbox for learning neural networks, evolving from character-level RNNs to a Transformer with BPE tokenization.
 
-The goal is to progressively build a minimal GPT-style input → response pipeline from scratch.
-
-Note: I have no clue what the project name stands for
+The goal currently is to progressively build a input → response pipeline from scratch.
 
 ## Current status
 - Transformer-based autoregressive language model
 - Train/validation split
-- Perplexity reporting
+- Perplexity tracking
 - Gradient clipping
 - Checkpoint saving (model + optimizer + metadata)
-- Text generation CLI (temperature sampling)
-- Interactive generation loop
+- Text generation CLI (bpegenerate)
 - DirectML (Windows AMD) compatibility fallback
-- Manual optimizer experimentation (SGD, Adam, custom Adam variant)
-- Training step timing utilities for performance benchmarking
+- Manual optimizer experimentation (SGD, Adam, , Lion, custom Adam variant)
+- Tokenization pipeline with BPE
 
 ## Project files
-- `train.py` — dataset building, model training, checkpoint saving
-- `generate.py` — one-shot CLI generation
-- `interactive_generate.py` — multi-turn interactive inference
+- `bpetrain.py` — model training, checkpoint saving
+- `bpegenerate.py` — one-shot CLI generation
 - `transformer.py` — Transformer model definition
-- `data.tx`t — raw training corpus
-- `train_tokenizer.py` (planned) — BPE tokenizer training
-## Overview
-`train.py`:
-- Loads raw text from `data.txt`.
-- Builds a character vocabulary and mappings (`char_to_idx`, `idx_to_char`).
-- Encodes text to indices and creates input/target sequences.
-- Trains `CharRNN` and saves `checkpoint.pth` including vocab and hyperparams.
-
-`generate.py`:
-- Exposes reusable generation utilities and a one-shot CLI.
-- Loads a checkpoint and generates autoregressive character text with temperature.
-
-`interactive_generate.py`:
-- Loads a checkpoint once at startup and runs a multi-turn `input()` loop.
-- Supports quit commands (`quit`, `exit`, `q`, `:q`) and empty-prompt handling.
+- `data.txt` — raw training corpus
+- `train_tokenizer.py` — BPE tokenizer training
+- `pretokenize.py` - data preprocessing using trained tokenizer
 
 ## Quick start
 1. Install dependencies:
@@ -52,35 +35,38 @@ pip install torch numpy
 
 ```
 
-2. Train (quick run):
+2. Train tokenizer:
 
 ```sh
-python train.py
+python train_tokenizer.py --data data.txt
 ```
 
-3. Generate from saved checkpoint:
+3. Preprocess text:
 
 ```sh
-python generate.py --ckpt checkpoint.pth --start "Sing, " --length 300 --temp 0.8
-
-# equivalent checkpoint flag:
-python generate.py --checkpoint checkpoint.pth --start "Sing, " --length 300 --temp 0.8
+python pretokenize.py --input data.txt --output pretokenized.txt
 ```
 
-4. Interactive generation (checkpoint loaded once):
+4. Train model:
 
 ```sh
-python interactive_generate.py --ckpt checkpoint.pth --length 300 --temp 0.8
+python bpetrain.py --data pretokenized.txt --ckpt checkpoint.pth
+```
+
+5. Generate text:
+
+```sh
+python bpegenerate.py --ckpt checkpoint.pth --start "Once upon a time" --length 200 --temp 0.8
 ```
 
 ## Next Development Direction
 
 Short-term:
-- Implement BPE tokenizer
-- Build structured Q&A dataset
-- Retrain Transformer
-- Improve sampling (top-k / nucleus)
-- Build minimal conversational interface
+- Improve BPE tokenization and pre-tokenization scripts
+- Add top-k and nucleus (top-p) sampling options
+- Enable quantized inference for faster generation
+- Expand datasets for structured Q&A and instruction tuning
+- Add automated evaluation metrics and benchmarks
 
 Long-term:
 - Instruction tuning
