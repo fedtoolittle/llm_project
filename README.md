@@ -1,14 +1,30 @@
 # b_lm_project
 
-Small char-level language-model preprocessing & data utilities.
+Small experimental language model project evolving from a character-level RNN to a mini Transformer architecture with plans for BPE tokenization and structured Q&A training.
+
+The goal is to progressively build a minimal GPT-style input → response pipeline from scratch.
+
+Note: I have no clue what the project name stands for
+
+## Current status
+- Transformer-based autoregressive language model
+- Train/validation split
+- Perplexity reporting
+- Gradient clipping
+- Checkpoint saving (model + optimizer + metadata)
+- Text generation CLI (temperature sampling)
+- Interactive generation loop
+- DirectML (Windows AMD) compatibility fallback
+- Manual optimizer experimentation (SGD, Adam, custom Adam variant)
+- Training step timing utilities for performance benchmarking
 
 ## Project files
-- `train.py` — preprocessing & dataset creation (reads `data.txt`, builds char vocab and sequences)
-- `generate.py` — sample/generate text from saved checkpoints (one-shot CLI + reusable generator)
-- `interactive_generate.py` — interactive prompt loop that reuses a loaded checkpoint
-- `model.py` — model definition (`CharRNN`)
-- `data.txt` — raw training text
-
+- `train.py` — dataset building, model training, checkpoint saving
+- `generate.py` — one-shot CLI generation
+- `interactive_generate.py` — multi-turn interactive inference
+- `transformer.py` — Transformer model definition
+- `data.tx`t — raw training corpus
+- `train_tokenizer.py` (planned) — BPE tokenizer training
 ## Overview
 `train.py`:
 - Loads raw text from `data.txt`.
@@ -29,7 +45,7 @@ Small char-level language-model preprocessing & data utilities.
 
 ```sh
 # CPU-only PyTorch (example):
-pip install torch numpy torchvision
+pip install torch numpy
 
 # Optional (Windows DirectML backend):
 # pip install torch-directml
@@ -57,9 +73,21 @@ python generate.py --checkpoint checkpoint.pth --start "Sing, " --length 300 --t
 python interactive_generate.py --ckpt checkpoint.pth --length 300 --temp 0.8
 ```
 
-## Notes
-- `generate.py` now robustly coerces saved mappings and uses safe sampling to avoid KeyErrors.
-- If you use an AMD GPU on Windows, `torch-directml` can be used as a backend; install it separately.
+## Next Development Direction
+
+Short-term:
+- Implement BPE tokenizer
+- Build structured Q&A dataset
+- Retrain Transformer
+- Improve sampling (top-k / nucleus)
+- Build minimal conversational interface
+
+Long-term:
+- Instruction tuning
+- Larger dataset
+- Deeper transformer
+- CUDA/ROCm-native acceleration
+- Evaluation metrics (perplexity + qualitative scoring)
 
 ## License
-This project is a small example and may be used for experimentation.
+This project is an educational implementation and experimentation sandbox for understanding how modern autoregressive language models are constructed from first principles.
