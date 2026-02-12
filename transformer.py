@@ -78,7 +78,7 @@ class FeedForward(nn.Module):
 class TransformerBlock(nn.Module):
     def __init__(self, embed_size, num_heads):
         super().__init__()
-        self.attn = MultiHeadAttention(embed_size, num_heads, batch_first=True)
+        self.attn = MultiHeadAttention(embed_size, num_heads)
         self.ff = FeedForward(embed_size)
 
         self.ln1 = nn.LayerNorm(embed_size)

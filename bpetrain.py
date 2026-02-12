@@ -42,6 +42,7 @@ def estimate_loss(model, data, eval_iters, batch_size, seq_len, device):
     model.train()
     return sum(losses) / len(losses)
 
+    
 
 # -------------------------------------------------
 # Main
@@ -52,15 +53,15 @@ def main():
     parser.add_argument("--data", default="data.txt")
     parser.add_argument("--tokenizer", default="tokenizer.json")
 
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--sequence_length", type=int, default=256)
-    parser.add_argument("--embed_size", type=int, default=768)
-    parser.add_argument("--num_heads", type=int, default=12)
-    parser.add_argument("--num_layers", type=int, default=12)
+    parser.add_argument("--embed_size", type=int, default=384)
+    parser.add_argument("--num_heads", type=int, default=6)
+    parser.add_argument("--num_layers", type=int, default=6)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--max_iters", type=int, default=30000)
+    parser.add_argument("--max_iters", type=int, default=20000)
     parser.add_argument("--eval_interval", type=int, default=500)
-    parser.add_argument("--eval_iters", type=int, default=100)
+    parser.add_argument("--eval_iters", type=int, default=50)
 
     parser.add_argument("--device", default=None)
 
@@ -84,11 +85,12 @@ def main():
         return torch.device("cpu")
     device = pick_device(args.device)
     print("Using device:", device)
+    print("Args OK", args.max_iters)
+    
 
-
-    # -------------------------------------------------
-    # Load and tokenize dataset
-    # -------------------------------------------------
+# -------------------------------------------------
+# Load and tokenize dataset
+# -------------------------------------------------
 
     text = Path(args.data).read_text(encoding="utf-8")
 
@@ -101,17 +103,17 @@ def main():
     print("Total tokens:", len(ids))
     print("Vocab size:", vocab_size)
 
-    # -------------------------------------------------
-    # Train / Val split
-    # -------------------------------------------------
+# -------------------------------------------------
+# Train / Val split
+# -------------------------------------------------
 
     split = int(0.9 * len(ids))
     train_data = ids[:split]
     val_data = ids[split:]
 
-    # -------------------------------------------------
-    # Model
-    # -------------------------------------------------
+# -------------------------------------------------
+# Model
+# -------------------------------------------------
 
     model = TransformerModel(
         vocab_size=vocab_size,
@@ -122,25 +124,30 @@ def main():
     ).to(device)
 
     from optim_lion import ManualLion
-    optimizer = ManualLion(model.parameters(), lr=args.lr)
+    optimizer = ManualLion(model.parameters(), lr=args.lr, weight_decay=1e-2)
 
     def count_parameters(model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print("Total parameters:", count_parameters(model))
 
-    # -------------------------------------------------
-    # Training loop
-    # -------------------------------------------------
+    best_val_loss = float("inf")
+    patience = 10                 # number of evals with no improvement
+    patience_counter = 0
+    min_delta = 1e-4             # minimum improvement threshold
+
+# -------------------------------------------------
+# Training loop
+# -------------------------------------------------
 
     for step in range(args.max_iters):
 
         xb, yb = get_batch(
-            train_data,
-            args.batch_size,
-            args.sequence_length,
-            device
-        )
+        train_data,
+        args.batch_size,
+        args.sequence_length,
+        device
+    )
 
         logits = model(xb)
 
@@ -149,11 +156,13 @@ def main():
             yb.view(-1)
         )
 
-        optimizer.zero_grad(set_to_none=True)
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
+        # ---- Evaluation ----
         if step % args.eval_interval == 0:
+
             train_loss = estimate_loss(
                 model,
                 train_data,
@@ -162,6 +171,7 @@ def main():
                 args.sequence_length,
                 device
             )
+
             val_loss = estimate_loss(
                 model,
                 val_data,
@@ -179,6 +189,21 @@ def main():
                 f"val_ppl {math.exp(val_loss):.2f}"
             )
 
+            # ---- Early stopping ----
+            if val_loss < best_val_loss - min_delta:
+                best_val_loss = val_loss
+                patience_counter = 0
+                torch.save(model.state_dict(), "best_model.pth")
+                print("New best model saved.")
+            else:
+                patience_counter += 1
+                print(f"No improvement. Patience: {patience_counter}/{patience}")
+
+                if patience_counter >= patience:
+                    print("Early stopping triggered.")
+                    break
+   
+
     # -------------------------------------------------
     # Save checkpoint
     # -------------------------------------------------
@@ -194,6 +219,10 @@ def main():
         },
         "checkpoint.pth",
     )
+
+    if Path("best_model.pth").exists():
+        model.load_state_dict(torch.load("best_model.pth"))
+    print("Loaded best validation model.")
 
     print("Training complete. Checkpoint saved.")
 

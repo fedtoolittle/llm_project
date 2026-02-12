@@ -32,12 +32,12 @@
 from tokenizers import Tokenizer, models, trainers, pre_tokenizers
 
 tokenizer = Tokenizer(models.BPE())
-tokenizer.pre_tokenizer = pre_tokenizers.Whitespace()
+tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel()
 
 trainer = trainers.BpeTrainer(
-    vocab_size=30000,
-    special_tokens=["<|pad|>", "<|bos|>", "<|eos|>"]
+    vocab_size=16000,
+    special_tokens=["[PAD]", "[UNK]", "[BOS]", "[EOS]"]
 )
 
-tokenizer.train(["wiki.txt"], trainer)
+tokenizer.train(["wikitext103_train.txt"], trainer)
 tokenizer.save("tokenizer.json")
