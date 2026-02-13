@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from torch import device, nn
 from tokenizers import Tokenizer
 
-import model
+#import model
 from transformer import TransformerModel
 from optim_lion import ManualLion
 
@@ -77,20 +77,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="wikitext103_train.txt")
     parser.add_argument("--tokenizer", default="tokenizer.json")
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--sequence_length", type=int, default=256)
-    parser.add_argument("--embed_size", type=int, default=768)
-    parser.add_argument("--num_heads", type=int, default=12)
-    parser.add_argument("--num_layers", type=int, default=12)
+    parser.add_argument("--embed_size", type=int, default=512)
+    parser.add_argument("--num_heads", type=int, default=8)
+    parser.add_argument("--num_layers", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--max_iters", type=int, default=50000)
-    parser.add_argument("--eval_interval", type=int, default=500)
+    parser.add_argument("--eval_interval", type=int, default=10)
     parser.add_argument("--eval_iters", type=int, default=50)
     parser.add_argument("--shard_dir", default=".\shards")
     parser.add_argument("--shard_pattern", type=str, default="wiki_shard_*.pt")
     parser.add_argument("--device", default=None)
     parser.add_argument("--train_ratio", type=float, default=0.9)
-
+    parser.add_argument("--resume_checkpoint", type=str, default="")
     args = parser.parse_args()
 
 # -------------------------------------------------
@@ -104,13 +104,13 @@ def main():
         if torch.cuda.is_available():
             return torch.device("cuda")
 
-        try:
-            import torch_directml
-            dml = torch_directml.device()
-            print("Using DirectML:", dml)
-            return dml
-        except Exception:
-            pass
+        # try:
+        #     import torch_directml
+        #     dml = torch_directml.device()
+        #     print("Using DirectML:", dml)
+        #     return dml
+        # except Exception:
+        #     pass
 
         return torch.device("cpu")
     device = pick_device(args.device)
@@ -138,7 +138,8 @@ def main():
     ).to(device)
 
 
-    optimizer = ManualLion(model.parameters(), lr=args.lr, weight_decay=1e-2)
+    #optimizer = ManualLion(model.parameters(), lr=args.lr, weight_decay=1e-2)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
 
     def count_parameters(model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -155,6 +156,14 @@ def main():
 # -------------------------------------------------
 
     step = 0
+
+    if args.resume_checkpoint:
+        checkpoint = torch.load(args.resume_checkpoint, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        step = checkpoint["step"] + 1
+        print(f"Resumed from checkpoint {args.resume_checkpoint} at step {step}")
+
     while step < args.max_iters:
         # Re-create shard generator each epoch
         shard_gen = load_shards(args.shard_dir, args.shard_pattern)
@@ -180,7 +189,12 @@ def main():
                     train_loss = estimate_loss(model, train_shard, args.eval_iters, args.batch_size, args.sequence_length, device)
                     val_loss = estimate_loss(model, val_shard, args.eval_iters, args.batch_size, args.sequence_length, device)
                     print(f"Step {step} | train_loss {train_loss:.4f} | train_ppl {math.exp(train_loss):.2f} | val_loss {val_loss:.4f} | val_ppl {math.exp(val_loss):.2f}")
-
+                    torch.save({
+                        "model_state_dict": model.state_dict(), 
+                        "optimizer_state_dict": optimizer.state_dict(),
+                        "step": step,
+                        }, f"checkpoint.pth")
+                    
                 # Break out of batch loop if step exceeds max_iters
                 if step >= args.max_iters:
                     break
@@ -212,7 +226,7 @@ def main():
             "num_layers": args.num_layers,
             "max_len": args.sequence_length,
         },
-        "checkpoint.pth",
+        "checkpoint_fin.pth",
     )
 
     if Path("best_model.pth").exists():

@@ -1,12 +1,6 @@
-from tokenizers import Tokenizer
+import torch
 
-tokenizer = Tokenizer.from_file("tokenizer.json")
-
-text = "User: According to the passage, who quarrelled at the start of the poem?"
-encoded = tokenizer.encode(text)
-
-print(encoded.tokens)
-print(encoded.ids)
-
-decoded = tokenizer.decode(encoded.ids)
-print(decoded)
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA version:", torch.version.cuda)
+print("Device count:", torch.cuda.device_count())
+print("Current device:", torch.cuda.current_device() if torch.cuda.is_available() else "N/A")

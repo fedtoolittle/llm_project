@@ -6,7 +6,7 @@ class SelfAttention(nn.Module):
     def __init__(self, embed_size):
         super().__init__()
         self.embed_size = embed_size
-        self.register_buffer("causalMask", torch.tril(torch.ones(sequenceLength, sequenceLength)).view(1, 1, sequenceLength, sequenceLength))
+        #self.register_buffer("causalMask", torch.tril(torch.ones(sequenceLength, sequenceLength)).view(1, 1, sequenceLength, sequenceLength))
         self.query = nn.Linear(embed_size, embed_size)
         self.key = nn.Linear(embed_size, embed_size)
         self.value = nn.Linear(embed_size, embed_size)
