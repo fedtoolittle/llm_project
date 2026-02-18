@@ -4,6 +4,8 @@ A minimal GPT-style language model sandbox for learning neural networks, evolvin
 
 The goal currently is to progressively build a input → response pipeline from scratch.
 
+The project is currently on indefinite hiatus due to insufficient resource
+
 ## Current status
 - Transformer-based autoregressive language model
 - Train/validation split
